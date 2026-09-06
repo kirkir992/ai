@@ -1,0 +1,76 @@
+Krok 1: Przygotowanie środowiska i czyszczenieZaloguj się na serwer jako root i upewnij się, że masz pobrane odpowiednie modele w Ollama oraz zainstalowane biblioteki [5.6]:bash# 1. Pobierz modele do Ollamy (Lekki do szybkiej pracy i ciężki do trudnych zadań)
+ollama pull qwen2.5-coder:7b-instruct
+ollama pull phi4:latest
+
+# 2. Zainstaluj wymagane pakiety Pythona i czcionki systemowe
+apt-get update && apt-get install -y python3-pip fonts-dejavu-core
+pip install streamlit plotly requests reportlab
+Używaj kodu z rozwagą.Krok 2: Zapisanie ostatecznego kodu aplikacjiUtwórz i zapisz pełny kod w pliku /u01/app.py (jeśli wolisz katalog /u02, podmień ścieżki w zmiennych UPLOAD_DIR i DB_PATH).bashnano /u01/app.py
+
+
+### Krok 3: Konfiguracja autostartu (Systemd Service)
+Stwórzmy teraz skrypt systemowy, aby panel www włączał się sam w tle systemu operacyjnego:
+
+1. Otwórz edytor nowej usługi:
+   ```bash
+   nano /etc/systemd/system/log-analyzer.service
+Wklej poniższą konfigurację (używamy portu 8501, bindowanie na 0.0.0.0 pozwala wejść z sieci lokalnej) [expert consensus]:ini[Unit]
+Description=Streamlit AI Log Analyzer Service
+After=network.target ollama.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/u01
+ExecStart=/usr/local/bin/streamlit run /u01/app.py --server.port 8501 --server.address 0.0.0.0
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+Używaj kodu z rozwagą.Zapisz plik (Ctrl+O, Enter, Ctrl+X).Krok 4: Uruchomienie i testy usługiPrzeładuj managera systemd i aktywuj usługę:bash# 1. Przeładuj konfigurację systemd
+systemctl daemon-reload
+
+# 2. Uruchom usługę log-analyzera
+systemctl start log-analyzer
+
+# 3. Włącz automatyczny start po reboot serwera
+systemctl enable log-analyzer
+
+# 4. Sprawdź status, czy usługa działa poprawnie (powinno świecić na zielono 'active (running)')
+systemctl status log-analyzer
+Używaj kodu z rozwagą.Krok 5: Korzystanie z portaluOtwórz przeglądarkę na swoim głównym komputerze.Wpisz adres IP swojego serwera oraz port 8501 (np. http://192.168.1.100:8501).Wybierz model qwen2.5-coder:7b-instruct, wklej log ze schowka lub wrzuć plik i kliknij start!Projekt jest w pełni wdrożony. Czy usługa systemd wstała bez błędów i panel www otworzył się pomyślnie w Twojej przeglądarce?Odpowiedzi wygenerowane przez AI mogą zawierać błędy. Więcej informacjida się zabezpieczyć dostęp do strony hasłem ?Tak, jak najbardziej da się to zrobić. Ponieważ Streamlit nie ma wbudowanego systemu logowania w swojej darmowej wersji, najprostszym, najbezpieczniejszym i w 100% profesjonalnym sposobem jest użycie tzw. Basic Authentication (uwierzytelnienia HTTP) za pomocą serwera Nginx [expert consensus].Nginx będzie działał jako tzw. Reverse Proxy (pośrednik) – stanie „przed” Streamlitem, przejmie ruch na porcie 80 (lub 443), zapyta użytkownika o login i hasło, a po ich poprawnym wpisaniu bezpiecznie przekaże ruch do aplikacji na port 8501.Oto prosta instrukcja krok po kroku, jak to skonfigurować na Twoim serwerze:Krok 1: Instalacja Nginx i narzędzi do generowania hasełUruchom w terminalu serwera jako root:bashapt-get update
+apt-get install nginx apache2-utils -y
+Używaj kodu z rozwagą.Krok 2: Wygenerowanie zaszyfrowanego hasłaUtwórz plik z użytkownikiem (np. admin) i podaj dla niego hasło (system poprosi Cię o jego wpisanie i powtórzenie):bashhtpasswd -c /etc/nginx/.htpasswd admin
+Używaj kodu z rozwagą.Krok 3: Konfiguracja Nginx do obsługi StreamlitaMusimy powiedzieć Nginxowi, aby chronił dostęp i przekazywał ruch do naszej aplikacji.Otwórz domyślny plik konfiguracyjny Nginx:bashnano /etc/nginx/sites-available/default
+Używaj kodu z rozwagą.Skasuj jego zawartość i wklej poniższy, gotowy blok (zoptymalizowany pod protokół WebSocket, którego używa Streamlit):nginxserver {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+    # Włączenie ochrony hasłem
+    auth_basic "AI Portal - Access Restricted";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location / {
+        proxy_pass http://127.0.0.1:8501;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Kluczowe dla Streamlita: obsługa WebSockets
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+Używaj kodu z rozwagą.Zapisz plik (Ctrl+O, Enter) i wyjdź (Ctrl+X).Krok 4: Zmiana konfiguracji usługi Streamlit (Bezpieczeństwo)Żeby nikt nie ominął Nginxa wpisując bezpośrednio port :8501, musimy zmienić konfigurację usługi systemd, aby Streamlit słuchał tylko połączeń lokalnych (127.0.0.1), a nie całego świata (0.0.0.0).Otwórz plik usługi stworzony w poprzednim kroku:bashnano /etc/systemd/system/log-analyzer.service
+Używaj kodu z rozwagą.W linijce ExecStart zmień --server.address 0.0.0.0 na --server.address 127.0.0.1:iniExecStart=/usr/local/bin/streamlit run /u01/app.py --server.port 8501 --server.address 127.0.0.1
+Używaj kodu z rozwagą.Zapisz plik, przeładuj systemd i zrestartuj usługę:bashsystemctl daemon-reload
+systemctl restart log-analyzer
+Używaj kodu z rozwagą.Krok 5: Uruchomienie NginxaPrzetestuj, czy konfiguracja Nginxa jest poprawna, i uruchom go:bashnginx -t  # Powinno wypisać "syntax is ok" i "test is successful"
+systemctl restart nginx
+systemctl enable nginx
