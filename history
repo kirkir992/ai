@@ -1,0 +1,469 @@
+978  mkdir ailogparser
+  979  cd ailogparser/
+  980  vi Dockerfile
+  981  vi docker-compose.yml
+  982  vi composer.json
+  983  vi config.php
+  984  vi db.php
+  985  vi ollama.php
+  986  vi upload.php
+  987  vi export_pdf.php
+  988  vi api_scans.php
+  989  vi index.php
+  990  vi index.php
+  991  vi api_scans.php
+  992  vi api_scans.php
+  993  mkdir -p data/log data/db
+  994  ll
+  995  docker compose up --build -d
+  996  vi Dockerfile
+  997  docker compose up --build -d
+  998  cat Dockerfile
+  999  vi Dockerfile
+ 1000  docker compose up --build -d
+ 1001  vi Dockerfile
+ 1002  docker compose up --build -d
+ 1003  docker ps
+ 1004  docker compose ailogparser-app app php -m | grep -Ei 'pdo_sqlite|sqlite3|curl|gd|zip|mbstring'
+ 1005  docker compose exec ailogparser-app php -m | grep -Ei 'pdo_sqlite|sqlite3|curl|gd|zip|mbstring'
+ 1006  docker compose exec fb6c3101d11b php -m | grep -Ei 'pdo_sqlite|sqlite3|curl|gd|zip|mbstring'
+ 1007  docker ps
+ 1008  docker logs fb6c3101d11b
+ 1009  pwd
+ 1010  ls -l
+ 1011  curl -s http://localhost:8080/ | head -20
+ 1012  ip a
+ 1013  docker ps
+ 1014  docker exec ailogparser-app-1 php -m | grep -Ei 'pdo_sqlite|sqlite3|curl|gd|zip|mbstring'
+ 1015  docker exec ailogparser-app-1 php -r "
+  \$p = new PDO('sqlite:/u01/scans.db');
+  \$p->exec('CREATE TABLE IF NOT EXISTS t(x)');
+  \$p->exec(\"INSERT INTO t VALUES('ok')\");
+  print_r(\$p->query('SELECT * FROM t')->fetchAll(PDO::FETCH_ASSOC));
+"
+ 1016  # W kontenerze
+ 1017  docker exec ailogparser-app-1 ls -ld /u01/log /u01
+ 1018  docker exec ailogparser-app-1 id www-data
+ 1019  docker exec ailogparser-app-1 touch /u01/log/test.txt && echo OK || echo FAIL
+ 1020  cd /u01/logi
+ 1021  cd /u01/log
+ 1022  ll
+ 1023  cd -
+ 1024  ll
+ 1025  cat ollama.php
+ 1026  cat config.php
+ 1027  ll /u01/log
+ 1028  # W kontenerze
+ 1029  docker exec ailogparser-app-1 ls -ld /u01/log /u01
+ 1030  docker exec ailogparser-app-1 id www-data
+ 1031  docker exec ailogparser-app-1 touch /u01/log/test.txt && echo OK || echo FAIL
+ 1032  curl -s http://localhost:8080/api_scans.php
+ 1033  chown -R 33:33 /u01/ailogparser/data/log /u01/ailogparser/data/db
+ 1034  chmod -R 775 /u01/ailogparser/data
+ 1035  curl -s http://localhost:8080/api_scans.php
+ 1036  docker exec ailogparser-app-1 sh -c "curl -s -m 5 http://192.168.95.219:11434/api/tags | head -c 300"
+ 1037  docker exec ailogparser-app-1 sh -c "curl -s -m 5 http://192.168.95.220:11434/api/tags | head -c 300"
+ 1038  ll
+ 1039  cat config.php
+ 1040  vi config.php
+ 1041  docker compose down --rmi all --volumes && docker compose up -d --build
+ 1042  docker ps
+ 1043  docker exec ailogparser-app-1 sh -c "curl -s -m 5 http://192.168.95.220:11434/api/tags | head -c 300"
+ 1044  ll
+ 1045  cat api_scans.php
+ 1046  cat composer.json
+ 1047  cat config.php
+ 1048  cat db.php
+ 1049  ll
+ 1050  cat docker-compose.yml
+ 1051  vi docker-compose.yml
+ 1052  cat Dockerfile
+ 1053  cat
+ 1054  ll
+ 1055  cat export_pdf.php
+ 1056  cat index.php
+ 1057  cat ollama.php
+ 1058  cat upload.php
+ 1059  docker compose down --rmi all --volumes && docker compose up -d --build
+ 1060  # Zatrzymaj i usuń kontenery + sieci
+ 1061  docker compose down
+ 1062  # Usuń też obraz aplikacji
+ 1063  docker compose down --rmi local
+ 1064  # Usuń WSZYSTKO łącznie z wolumenami (uwaga: dane!)
+ 1065  docker compose down --rmi all --volumes
+ 1066  # Przebuduj od zera
+ 1067  docker compose build --no-cache
+ 1068  docker compose up -d
+ 1069  docker ps
+ 1070  docker exec ailogparser-app-1 curl -s -m 5 http://192.168.95.219:11434
+ 1071  docker exec ailogparser-app-1 curl -s -m 5 http://192.168.95.220:11434
+ 1072  docker exec ailogparser-app-1 curl -s http://192.168.95.220:11434/api/tags
+ 1073  grep OLLAMA_URL config.php
+ 1074  docker exec ailogparser-app-1 cat config.php | grep -i ollama
+ 1075  # 1. Czy PHP ma curl?
+ 1076  docker exec ailogparser-app-1 php -m | grep -Ei 'curl|openssl|pdo_sqlite|sqlite3|gd|zip'
+ 1077  # 2. Czy funkcja curl_init istnieje?
+ 1078  docker exec ailogparser-app-1 php -r "var_dump(function_exists('curl_init'));"
+ 1079  # 3. Test PHP → Ollama (najważniejszy)
+ 1080  docker exec ailogparser-app-1 php -r '
+$ch = curl_init("http://192.168.95.220:11434/api/tags");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+$r = curl_exec($ch);
+if ($r === false) { echo "CURL ERROR: " . curl_error($ch); }
+else { echo substr($r, 0, 200); }
+'
+ 1081  echo "test log line" > /tmp/test.log
+ 1082  curl -v -F "logfile=@/tmp/test.log" http://localhost:8080/upload.php
+ 1083  sed -i "s|require __DIR__ . '/db.php';|require __DIR__ . '/db.php';\nrequire __DIR__ . '/ollama.php';|" upload.php
+ 1084  head -10 upload.php
+ 1085  docker cp upload.php ailogparser-app-1:/var/www/html/upload.php
+ 1086  docker exec ailogparser-app-1 head -6 /var/www/html/upload.php
+ 1087  docker compose up -d --build
+ 1088  vi docker-compose.yml
+ 1089  docker compose up -d
+ 1090  curl -v -F "logfile=@/tmp/test.log" http://localhost:8080/upload.php
+ 1091  # 1. Czy vendor istnieje?
+ 1092  docker exec ailogparser-app-1 ls -la /var/www/html/vendor/ 2>&1 | head
+ 1093  # 2. Co jest w composer.json?
+ 1094  cat composer.json
+ 1095  # 3. Czy composer.lock istnieje?
+ 1096  ls -la composer.lock 2>&1
+ 1097  # Krok 1: Zainstaluj vendor/ w katalogu projektu na hoście
+ 1098  docker run --rm -v "$PWD":/app -w /app composer:2 install --no-dev --no-interaction --optimize-autoloader
+ 1099  # Krok 2: Sprawdź, czy vendor/autoload.php powstał
+ 1100  ls -la vendor/autoload.php
+ 1101  cat > composer.json <<'EOF'
+{
+  "require": {
+    "dompdf/dompdf": "^3.0"
+  }
+}
+EOF
+
+ 1102  cat composer.json
+ 1103  docker run --rm -v "$PWD":/app -w /app composer:2 install --no-dev --no-interaction --optimize-autoloader
+ 1104  ls -la vendor/autoload.php
+ 1105  ls -la composer.lock
+ 1106  docker cp vendor ailogparser-app-1:/var/www/html/
+ 1107  docker cp composer.json ailogparser-app-1:/var/www/html/
+ 1108  curl -s http://localhost:8080/export_pdf.php -o /tmp/test.pdf
+ 1109  file /tmp/test.pdf
+ 1110  docker-php-ext-install pdo_sqlite curl gd zip mbstring
+ 1111  history
+ 1112  vi models.php
+ 1113  vi config.php
+ 1114  ll
+ 1115  vi db.php
+ 1116  vi ollama.php
+ 1117  vi models.php
+ 1118  vi upload.php
+ 1119  vi ollama.php
+ 1120  vi api_scans.php
+ 1121  vi index.php
+ 1122  vi export_pdf.php
+ 1123  vi docker-compose.yml
+ 1124  pwd
+ 1125  cd /u01/ailogparser
+ 1126  for f in config.php db.php ollama.php models.php upload.php          api_scans.php index.php export_pdf.php; do   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1127  docker compose restart
+ 1128  # 1. Lista modeli z Ollama
+ 1129  curl -s http://localhost:8080/models.php | python3 -m json.tool
+ 1130  # 2. Upload z wybranym modelem
+ 1131  echo "2026-09-14 CRITICAL kernel: segfault; disk failure predicted" > /tmp/test.log
+ 1132  curl -s -F "logfile=@/tmp/test.log"      -F "model=qwen2.5-coder:7b-instruct"      http://localhost:8080/upload.php | python3 -m json.tool
+ 1133  # 3. Lista skanów
+ 1134  curl -s http://localhost:8080/api_scans.php | python3 -m json.tool | head -40
+ 1135  # 4. PDF — wszystkie skany
+ 1136  curl -s "http://localhost:8080/export_pdf.php" -o /tmp/report.pdf
+ 1137  file /tmp/report.pdf
+ 1138  # 5. PDF — konkretny scan
+ 1139  curl -s "http://localhost:8080/export_pdf.php?id=1" -o /tmp/report1.pdf
+ 1140  file /tmp/report1.pdf
+ 1141  vi index.php
+ 1142  cd /u01/ailogparser
+ 1143  docker cp index.php ailogparser-app-1:/var/www/html/
+ 1144  vi db.php
+ 1145  vi upload.php
+ 1146  vi api_scans.php
+ 1147  vi index.php
+ 1148  cd /u01/ailogparser
+ 1149  for f in db.php upload.php api_scans.php index.php export_pdf.php; do   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1150  docker compose restart
+ 1151  cd /u01/log/
+ 1152  ll
+ 1153  cd -
+ 1154  cd data/
+ 1155  ll
+ 1156  cd log/
+ 1157  ll
+ 1158  cat syslog
+ 1159  cd -
+ 1160  cd ../
+ 1161  vi upload.php
+ 1162  vi api_scans.php
+ 1163  vi index.php
+ 1164  vi upload.php
+ 1165  vi api_scans.php
+ 1166  vi index.php
+ 1167  cd /u01/ailogparser
+ 1168  for f in ollama.php upload.php api_scans.php index.php; do   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1169  docker compose restart
+ 1170  # Wymuś backfill — pierwszy request uruchomi migrację
+ 1171  curl -s http://localhost:8080/api_scans.php > /dev/null
+ 1172  # Sprawdź, czy hosty się uzupełniły
+ 1173  curl -s http://localhost:8080/api_scans.php | python3 -m json.tool | head -50
+ 1174  docker exec ailogparser-app-1 grep -c quick_severity_scan /var/www/html/ollama.php
+ 1175  cd /u01/ailogparser
+ 1176  # Skopiuj WSZYSTKIE zmienione pliki
+ 1177  for f in ollama.php upload.php api_scans.php index.php; do   echo "→ $f";   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1178  # Restart Apache, żeby PHP nie trzymał starego opcache
+ 1179  docker compose restart
+ 1180  # Weryfikacja
+ 1181  docker exec ailogparser-app-1 grep -c quick_severity_scan /var/www/html/ollama.php
+ 1182  docker exec ailogparser-app-1 grep -c quick_severity_scan /var/www/html/ollama.php
+ 1183  vi ollama.php
+ 1184  for f in ollama.php upload.php api_scans.php index.php; do   echo "→ $f";   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1185  docker compose restart
+ 1186  docker exec ailogparser-app-1 grep -c quick_severity_scan /var/www/html/ollama.php
+ 1187  vi ollama.php
+ 1188  vi upload.php
+ 1189  ll
+ 1190  vi delete_scan.php
+ 1191  vi delete_scan.php
+ 1192  vi index.php
+ 1193  vi index.php
+ 1194  cd /u01/ailogparser
+ 1195  for f in ollama.php upload.php index.php delete_scan.php; do   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1196  docker compose restart
+ 1197  curl -s -X POST http://localhost:8080/upload.php   --data-urlencode "logtext=Sep 14 18:00:19 lxmaster003 kernel: nvidia-gpu 0000:04:00.3: i2c timeout error e0000000
+Sep 14 18:00:19 lxmaster003 kernel: ucsi_ccg: probe of 1-0008 failed with error -110
+Sep 14 18:00:20 lxmaster003 ovpn-client[1827]: Options error: option 'dhcp-option' cannot be used in this context"   -F "model=qwen2.5-coder:7b-instruct"   -F "host=lxmaster003" | python3 -m json.tool
+ 1198  curl -s -X POST http://localhost:8080/upload.php   --data-urlencode "logtext=Sep 14 18:00:19 lxmaster003 kernel: nvidia-gpu 0000:04:00.3: i2c timeout error e0000000
+Sep 14 18:00:19 lxmaster003 kernel: ucsi_ccg: probe of 1-0008 failed with error -110
+Sep 14 18:00:20 lxmaster003 ovpn-client[1827]: Options error: option 'dhcp-option' cannot be used in this context"   -F "model=qwen2.5-coder:7b-instruct"   -F "host=lxmaster003" | python3 -m json.tool
+ 1199  vi db.php
+ 1200  vi ollama.php
+ 1201  vi db.php
+ 1202  vi ollama.php
+ 1203  vi upload.php
+ 1204  vi api_scans.php
+ 1205  vi delete_scan.php
+ 1206  vi index.php
+ 1207  vi export_pdf.php
+ 1208  cd /u01/ailogparser
+ 1209  for f in db.php ollama.php upload.php api_scans.php delete_scan.php index.php export_pdf.php; do   echo "→ $f";   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1210  docker compose restart
+ 1211  # Migracja bazy
+ 1212  curl -s http://localhost:8080/api_scans.php > /dev/null
+ 1213  cat  docker-compose.yml
+ 1214  cat  Dockerfile
+ 1215  docker run --privileged --rm tonistiigi/binfmt --install ppc64le
+ 1216  docker buildx create --name mybuilder --use
+ 1217  cd ../
+ 1218  cp -r ailogparser ailogparser_ppc64le
+ 1219  cd ailogparser_ppc64le
+ 1220  docker buildx use mybuilder
+ 1221  # Przełącz się na istniejący builder "mybuilder"
+ 1222  docker buildx use mybuilder
+ 1223  # Uruchom go i sprawdź, czy widzi architekturę ppc64le
+ 1224  docker buildx inspect --bootstrap
+ 1225  history
+ 1226  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1227  vi Dockerfile
+ 1228  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1229  docker run -d -p 8080:81 --name test-ppc64le ailogparser:ppc64le
+ 1230  docker ps
+ 1231  docker image list
+ 1232  docker ps -all
+ 1233  docker rm -f test-ppc64le
+ 1234  docker run -d -p 8888:80 --name test-ppc64le ailogparser:ppc64le
+ 1235  docker ps
+ 1236  cat Dockerfile
+ 1237  vi Dockerfile
+ 1238  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1239  docker buildx build --no-cache --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1240  vi Dockerfile
+ 1241  sed -i '/getcomposer.org/c\RUN curl -sS https://getcomposer.org | php -- --install-dir=/usr/bin --filename=composer' Dockerfile
+ 1242  cat Dockerfile
+ 1243  cat Dockerfile |grep Run curl
+ 1244  cat Dockerfile |grep "RUN curl"
+ 1245  sed -i '/getcomposer.org/c\RUN curl -sS https://getcomposer.org | php -- --install-dir=/usr/bin --filename=composer' Dockerfile
+ 1246  cat Dockerfile |grep "RUN curl"
+ 1247  sed -i '/RUN curl/c\RUN curl -sS https://getcomposer.org | php -- --install-dir=/usr/bin --filename=composer' Dockerfile
+ 1248  cat Dockerfile |grep "RUN curl"
+ 1249  sed -i 's|getcomposer.org|getcomposer.org/installer|g' Dockerfile
+ 1250  cat Dockerfile |grep "RUN curl"
+ 1251  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1252  docker ps
+ 1253  docker stop 613cb77cff12
+ 1254  docker rm 613cb77cff12
+ 1255  docker run -d -p 8888:80 --name test-ppc64le ailogparser:ppc64le
+ 1256  docker ps
+ 1257  docker save ailogparser:ppc64le -o ailogparser_ppc64le.tar
+ 1258  ls -ltr
+ 1259  chmod 777 ailogparser_ppc64le.tar
+ 1260  vi Dockerfile
+ 1261  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1262  docker compose up -d
+ 1263  docker ps
+ 1264  docker stop c0dd8c2daac0
+ 1265  docker rm c0dd8c2daac0
+ 1266  docker run -d -p 8888:80 --name test-ppc64le ailogparser:ppc64le
+ 1267  docker ps
+ 1268  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1269  docker ps
+ 1270  docker stop d12be056d30e
+ 1271  docker rm d12be056d30e
+ 1272  docker run -d -p 8888:80 --name test-ppc64le ailogparser:ppc64le
+ 1273  dokcer ps
+ 1274  docker ps
+ 1275  docker rm d39c15eb5832
+ 1276  docker stop d39c15eb5832
+ 1277  docker rm d39c15eb5832
+ 1278  docker buildx build --platform linux/ppc64le -t ailogparser:ppc64le --load .
+ 1279  docker run -d -p 8888:80 --name test-ppc64le ailogparser:ppc64le
+ 1280  ll
+ 1281  rm ailogparser_ppc64le.tar
+ 1282  docker save ailogparser:ppc64le -o ailogparser_ppc64le.tar
+ 1283  ll -ltr
+ 1284  chmod 777 ailogparser_ppc64le.tar
+ 1285  du -sh .
+ 1286  rm ailogparser_ppc64le.tar
+ 1287  cd ../
+ 1288  history |grep gzip
+ 1289  tar -zcvf ailogparser_ppc64le.tar.gz ailogparser_ppc64le
+ 1290  ll -ltr
+ 1291  hisory
+ 1292  history
+
+
+
+   948  dnf install iperf3 -y
+  949  iperf3 -s
+  950  cat br0.nmconnection
+  951  nmcli con show
+  952  ip a
+  953  mcli connection modify br0 802-3-ethernet.mtu 9000
+  954  bmcli connection modify br0 802-3-ethernet.mtu 9000
+  955  nmcli connection modify br0 802-3-ethernet.mtu 9000
+  956  nmcli connection up br0
+  957  ip a | grep mtu
+  958  # 1. Wymuszenie MTU 9000 bezpośrednio na profilu karty fizycznej
+  959  nmcli connection modify enp1s0 802-3-ethernet.mtu 9000
+  960  # 2. Przeładowanie interfejsów, aby NetworkManager zastosował zmiany
+  961  nmcli connection up enp1s0
+  962  nmcli connection up br0
+  963  ip a | grep mtu
+  964  ssh tom@10.9.0.14
+  965  ll
+  966  df -h
+  967  ./speedtest
+  968  virsh list -all
+  969  virsh list --all
+  970  cd /u01/ailogparser_ppc64le/
+  971  cat Dockerfile
+  972  ll -ltr
+  973  cd vendor/
+  974  ll
+  975  cd ../
+  976  cd ../ailogparser
+  977  cd /u01/ailogparser
+  978  mkdir -p auth
+  979  # Pierwszy użytkownik (zapyta o hasło)
+  980  docker run --rm -v "$PWD/auth":/auth httpd:2.4   htpasswd -c -B /auth/.htpasswd admin
+  981  ls -la auth/
+  982  cat auth/.htpasswd
+  983  cat > auth/htaccess.conf <<'EOF'
+AuthType Basic
+AuthName "AI Log Scan — logowanie"
+AuthUserFile /etc/apache2/auth/.htpasswd
+Require valid-user
+EOF
+
+  984  vi Dockerfile
+  985  vi .dockerignore
+  986  cat > .dockerignore <<'EOF'
+auth/
+data/
+vendor/
+.git/
+*.log
+EOF
+
+  987  cat .dockerignore
+  988  cd /u01/ailogparser
+  989  docker compose down
+  990  docker compose build --no-cache
+  991  docker compose up -d
+  992  cd /u01/ailogparser
+  993  cat > auth/htaccess.conf <<'EOF'
+AuthType Basic
+AuthName "AI Log Scan — logowanie"
+AuthUserFile /etc/apache2/auth/.htpasswd
+Require valid-user
+EOF
+
+  994  ls -la auth/
+  995  # powinno być:
+  996  #   .htpasswd
+  997  #   htaccess.conf
+  998  cat .dockerignore
+  999  vi .dockerignore
+ 1000  vi Dockerfile
+ 1001  cat > .dockerignore <<'EOF'
+data/
+vendor/
+.git/
+*.log
+EOF
+
+ 1002  cat .dockerignore
+ 1003  cd /u01/ailogparser
+ 1004  ls -la
+ 1005  ls -la auth/
+ 1006  docker compose down
+ 1007  docker compose build --no-cache
+ 1008  docker compose up -d
+ 1009  cd /u01/ailogparser
+ 1010  docker run --rm -it -v "$PWD/auth":/auth httpd:2.4   htpasswd -B /auth/.htpasswd admin
+ 1011  docker ps
+ 1012  cd /u01/ailogparser
+ 1013  docker compose build --no-cache 2>&1 | tee /tmp/build.log | tail -80
+ 1014  docker compose up -d
+ 1015  ll
+ 1016  cp -r auth/ ../ailogparser_ppc64le/
+ 1017  cp Dockerfile  ../ailogparser_ppc64le/
+ 1018  vi Dockerfile
+ 1019  docker compose build --no-cache
+ 1020  docker run --rm php:8.5 ls /etc/apache2/mods-available/ | head
+ 1021  docker run --rm php:8.5-apache ls /etc/apache2/mods-available/ | head
+ 1022  vi Dockerfile
+ 1023  docker compose build --no-cache
+ 1024  docker compose up -d
+ 1025  docker exec ailogparser-app-1 php -r '
+$cfg = require "/var/www/html/config.php";
+echo "OLLAMA_API: " . $cfg["ollama_api"] . "\n";
+$ch = curl_init($cfg["ollama_api"] . "/api/tags");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+$r = curl_exec($ch);
+$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+echo "HTTP: $code\n";
+if ($r === false) echo "ERR: " . curl_error($ch) . "\n";
+else echo "RESP: " . substr($r, 0, 200) . "\n";
+'
+ 1026  curl -i -u admin:berni102 http://localhost:8080/models.php
+ 1027  vi ollama.php
+ 1028  docker cp ollama.php ailogparser-app-1:/var/www/html/
+ 1029  cp ollama.php ../ailogparser_ppc64le/
+ 1030  vi chat.php
+ 1031  vi ollama.php
+ 1032  vi chat_history.php
+ 1033  vi delete_chat.php
+ 1034  vi index.php
+ 1035  cd /u01/ailogparser
+ 1036  for f in index.php chat.php chat_history.php delete_chat.php ollama.php; do   docker cp "$f" ailogparser-app-1:/var/www/html/; done
+ 1037  docker compose restart
+ 1038  cp chat.php ollama.php chat_history.php delete_chat.php index.php ../ailogparser_ppc64le/
+ 1039  history
